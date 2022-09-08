@@ -5,18 +5,33 @@
 #include "mem.h"
 #include "proc.h"
 
+DWORD jmpBackAddr;
+void __declspec(naked) HighJump() {
+	__asm {
+		
+		fstp dword ptr [esi+0x3c]
+
+		; overwritten instructions from the jump
+		pop edi
+		pop ebp
+
+		jmp[jmpBackAddr];
+	}
+}
+
 DWORD WINAPI HackThread(HMODULE hModule) {
 	AllocConsole();
 	
 	FILE* f;
-	freopen_s(&f, "CONOUT%", "w", stdout);
+	freopen_s(&f, "CONOUT$", "w", stdout);
 	std::cout << "started" << std::endl;
 
 	uintptr_t moduleBase = (uintptr_t)GetModuleHandle(L"ac_client.exe");
 
-	bool bHealth = false, bAmmo = false, bRecoil = false;
+	bool bHealth = false, bAmmo = false, bRecoil = false, bHighJump = false;
 
 	while (true) {
+
 		if (GetAsyncKeyState(VK_END) & 1) {
 			break;
 		}
@@ -38,6 +53,19 @@ DWORD WINAPI HackThread(HMODULE hModule) {
 				// original instructions
 				mem::Patch((BYTE*)(moduleBase + 0x63786), (BYTE*)"\x50\x8d\x4c\x24\x1c\x51\x8b\xce\xff\xd2", 10);
 			}
+		}
+
+		if (GetAsyncKeyState(VK_NUMPAD4) & 1) {
+			bHighJump = !bHighJump;
+			
+			if (bHighJump) {
+				DWORD hookAddr = (DWORD)(moduleBase + 0x5be04);
+				int hookLength = 5;
+				mem::Hook((void*)hookAddr, HighJump, hookLength);
+			}
+			else {
+				mem::Patch((BYTE*)(moduleBase + 0x5be04), (BYTE*)"\xd9\x5e\x3c\x5f\x5d", 5);
+			} 
 		}
 
 		uintptr_t* localPlayerPtr = (uintptr_t*)(moduleBase + 0x10f4f4);

@@ -51,3 +51,24 @@ uintptr_t mem::FindDMAAddy(uintptr_t ptr, std::vector<unsigned int> offsets) {
 	return addr;
 }
 
+// hook functions
+bool mem::Hook(void* toHook, void* ourFunc, int len) {
+	if (len < 5)
+		return false;
+
+	DWORD prot;
+	VirtualProtect(toHook, len, PAGE_EXECUTE_READWRITE, &prot);
+
+	memset(toHook, 0x90, len);
+	
+	DWORD relativeAddr = ((DWORD)ourFunc) - ((DWORD)toHook + 5);
+
+	// jmp
+	*(BYTE*)toHook = 0xe9;
+	*(DWORD*)((DWORD)toHook + 1) = relativeAddr;
+
+	DWORD tmp;
+	VirtualProtect(toHook, len, prot, &tmp);
+
+	return true;
+}

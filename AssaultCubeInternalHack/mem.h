@@ -16,4 +16,6 @@ namespace mem {
 	void Nop(BYTE* dst, unsigned int size);
 
 	uintptr_t FindDMAAddy(uintptr_t ptr, std::vector<unsigned int> offsets);
+
+	bool Hook(void* toHook, void* ourFunc, int len);
 }
