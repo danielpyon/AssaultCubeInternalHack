@@ -1,5 +1,7 @@
 # AC internal hack
 
 ## todo:
-* hook custom fn
-* triggerbot reversing + implementation
+
+- [x] hook custom fn
+- [ ] apply levitation only to player
+- [ ] triggerbot reversing + implementation
