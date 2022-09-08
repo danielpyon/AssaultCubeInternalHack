@@ -11,7 +11,6 @@ float deltaHeight = 2.0f;
 DWORD jmpBackAddr;
 // no prolog/epilog
 void __declspec(naked) Levitate() {
-	// jank shit
 	__asm {
 		fstp dword ptr[esi + 0x3c]
 
@@ -28,7 +27,7 @@ void __declspec(naked) Levitate() {
 		; save reg
 		pop eax
 
-		jne cont	
+		jne cont
 
 		fld dword ptr[esi+0x3c]
 		fadd dword ptr[deltaHeight]
