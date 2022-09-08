@@ -6,13 +6,36 @@
 #include "proc.h"
 
 
-float elevatedHeight = std::numeric_limits<float>::infinity();
-float deltaHeight = 2.0f;
-DWORD jmpBackAddr;
+float g_elevatedHeight = std::numeric_limits<float>::infinity();
+float g_deltaHeight = 5.0f;
+DWORD g_jmpBackAddr;
+char* g_username = NULL;
+
 // no prolog/epilog
 void __declspec(naked) Levitate() {
 	__asm {
 		fstp dword ptr[esi + 0x3c]
+
+		; compare g_username with the username in the struct
+		push eax
+		push esi
+		push edi
+		
+		lea edi, [esi + 0x225]
+		mov esi, g_username
+		push esi
+		push edi
+		call strcmp
+		add esp, 8
+		cmp eax, 0
+		jne done
+
+		pop edi
+		pop esi
+		pop eax
+
+
+
 
 		; save reg
 		push eax
@@ -22,7 +45,7 @@ void __declspec(naked) Levitate() {
 		mov eax, 0xff
 		shl eax, 23
 
-		cmp dword ptr [elevatedHeight], eax
+		cmp dword ptr [g_elevatedHeight], eax
 		
 		; save reg
 		pop eax
@@ -30,18 +53,29 @@ void __declspec(naked) Levitate() {
 		jne cont
 
 		fld dword ptr[esi+0x3c]
-		fadd dword ptr[deltaHeight]
-		fstp dword ptr[elevatedHeight]
+		fadd dword ptr[g_deltaHeight]
+		fstp dword ptr[g_elevatedHeight]
 
-		cont:
-		fld dword ptr[elevatedHeight]
+	cont:
+		fld dword ptr[g_elevatedHeight]
 		fstp dword ptr [esi+0x3c]
 		
+
 		; overwritten instructions from the jump
 		pop edi
 		pop ebp
 
-		jmp[jmpBackAddr];
+		jmp[g_jmpBackAddr];
+
+
+	done:
+		pop edi
+		pop esi
+		pop eax
+
+		pop edi
+		pop ebp
+		jmp[g_jmpBackAddr]
 	}
 }
 
@@ -54,7 +88,7 @@ DWORD WINAPI HackThread(HMODULE hModule) {
 
 	uintptr_t moduleBase = (uintptr_t)GetModuleHandle(L"ac_client.exe");
 
-	bool bHealth = false, bAmmo = false, bRecoil = false, bHighJump = false;
+	bool bHealth = false, bAmmo = false, bRecoil = false, bLevitate = false;
 
 	while (true) {
 
@@ -82,21 +116,21 @@ DWORD WINAPI HackThread(HMODULE hModule) {
 		}
 
 		if (GetAsyncKeyState(VK_NUMPAD4) & 1) {
-			bHighJump = !bHighJump;
+			bLevitate = !bLevitate;
 			
-			if (bHighJump) {
+			if (bLevitate) {
 				DWORD hookAddr = (DWORD)(moduleBase + 0x5be04);
 				int hookLength = 5;
 				
 				// global
-				jmpBackAddr = hookAddr + hookLength;
+				g_jmpBackAddr = hookAddr + hookLength;
 
 				mem::Hook((void*)hookAddr, Levitate, hookLength);
-
+				
 			}
 			else {
 				// we have to reset the height because player pos height changed
-				elevatedHeight = std::numeric_limits<float>::infinity();
+				g_elevatedHeight = std::numeric_limits<float>::infinity();
 				
 				mem::Patch((BYTE*)(moduleBase + 0x5be04), (BYTE*)"\xd9\x5e\x3c\x5f\x5d", 5);
 			} 
@@ -105,6 +139,8 @@ DWORD WINAPI HackThread(HMODULE hModule) {
 		uintptr_t* localPlayerPtr = (uintptr_t*)(moduleBase + 0x10f4f4);
 		
 		if (localPlayerPtr) {
+			g_username = (char*) (*localPlayerPtr + 0x225);
+
 			if (bHealth) {
 				*(int*)(*localPlayerPtr + 0xf8) = 1337;
 			}

@@ -3,5 +3,5 @@
 ## todo:
 
 - [x] hook custom fn
-- [ ] apply levitation only to player
+- [x] apply levitation only to player
 - [ ] triggerbot reversing + implementation
