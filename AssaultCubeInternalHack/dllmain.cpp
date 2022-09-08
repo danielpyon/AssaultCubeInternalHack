@@ -5,12 +5,39 @@
 #include "mem.h"
 #include "proc.h"
 
-DWORD jmpBackAddr;
-void __declspec(naked) HighJump() {
-	__asm {
-		
-		fstp dword ptr [esi+0x3c]
 
+float elevatedHeight = std::numeric_limits<float>::infinity();
+float deltaHeight = 2.0f;
+DWORD jmpBackAddr;
+// no prolog/epilog
+void __declspec(naked) Levitate() {
+	// jank shit
+	__asm {
+		fstp dword ptr[esi + 0x3c]
+
+		; save reg
+		push eax
+
+		; +inf in int format
+		xor eax, eax
+		mov eax, 0xff
+		shl eax, 23
+
+		cmp dword ptr [elevatedHeight], eax
+		
+		; save reg
+		pop eax
+
+		jne cont	
+
+		fld dword ptr[esi+0x3c]
+		fadd dword ptr[deltaHeight]
+		fstp dword ptr[elevatedHeight]
+
+		cont:
+		fld dword ptr[elevatedHeight]
+		fstp dword ptr [esi+0x3c]
+		
 		; overwritten instructions from the jump
 		pop edi
 		pop ebp
@@ -24,7 +51,7 @@ DWORD WINAPI HackThread(HMODULE hModule) {
 	
 	FILE* f;
 	freopen_s(&f, "CONOUT$", "w", stdout);
-	std::cout << "started" << std::endl;
+	std::cout << "Started client..." << std::endl;
 
 	uintptr_t moduleBase = (uintptr_t)GetModuleHandle(L"ac_client.exe");
 
@@ -61,9 +88,17 @@ DWORD WINAPI HackThread(HMODULE hModule) {
 			if (bHighJump) {
 				DWORD hookAddr = (DWORD)(moduleBase + 0x5be04);
 				int hookLength = 5;
-				mem::Hook((void*)hookAddr, HighJump, hookLength);
+				
+				// global
+				jmpBackAddr = hookAddr + hookLength;
+
+				mem::Hook((void*)hookAddr, Levitate, hookLength);
+
 			}
 			else {
+				// we have to reset the height because player pos height changed
+				elevatedHeight = std::numeric_limits<float>::infinity();
+				
 				mem::Patch((BYTE*)(moduleBase + 0x5be04), (BYTE*)"\xd9\x5e\x3c\x5f\x5d", 5);
 			} 
 		}
