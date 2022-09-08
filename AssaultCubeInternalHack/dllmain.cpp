@@ -7,7 +7,7 @@
 
 
 float g_elevatedHeight = std::numeric_limits<float>::infinity();
-float g_deltaHeight = 5.0f;
+float g_deltaHeight = 10.0f;
 DWORD g_jmpBackAddr;
 char* g_username = NULL;
 
