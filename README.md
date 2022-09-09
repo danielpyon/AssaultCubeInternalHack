@@ -4,4 +4,6 @@
 
 - [x] hook custom fn
 - [x] apply levitation only to player
-- [ ] triggerbot reversing + implementation
+- [x] triggerbot reversing + implementation
+- [ ] aimbot
+- [ ] esp

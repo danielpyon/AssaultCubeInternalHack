@@ -22,7 +22,7 @@ public:
 	class ent* owner; //0x0008
 	char pad_000C[4]; //0x000C
 	class ammoPtr* ammoReserve; //0x0010
-	class ammoPtr* N00000235; //0x0014
+	class ammoPtr* ammoClip; //0x0014
 	char pad_0018[44]; //0x0018
 }; //Size: 0x0044
 
@@ -38,7 +38,7 @@ public:
 	int32_t health; //0x00F8
 	char pad_00FC[296]; //0x00FC
 	int8_t bAttack; //0x0224
-	char pad_0225[263]; //0x0225
+	char username[263]; //0x0225
 	int32_t team; //0x032C
 	char pad_0330[68]; //0x0330
 	class weapon* currentWeapon; //0x0374

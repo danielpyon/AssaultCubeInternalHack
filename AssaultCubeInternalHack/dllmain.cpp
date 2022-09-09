@@ -4,12 +4,15 @@
 #include <TlHelp32.h>
 #include "mem.h"
 #include "proc.h"
+#include "ent.h"
 
+typedef ent* ( __cdecl* tGetCrosshairEnt )();
+tGetCrosshairEnt g_GetCrosshairEnt = nullptr;
 
 float g_elevatedHeight = std::numeric_limits<float>::infinity();
 float g_deltaHeight = 10.0f;
 DWORD g_jmpBackAddr;
-char* g_username = NULL;
+char* g_username = nullptr;
 
 // no prolog/epilog
 void __declspec(naked) Levitate() {
@@ -87,8 +90,11 @@ DWORD WINAPI HackThread(HMODULE hModule) {
 	std::cout << "Started client..." << std::endl;
 
 	uintptr_t moduleBase = (uintptr_t)GetModuleHandle(L"ac_client.exe");
+	g_GetCrosshairEnt = (tGetCrosshairEnt) (moduleBase + 0x607c0);
 
-	bool bHealth = false, bAmmo = false, bRecoil = false, bLevitate = false;
+	bool bHealth = false, bAmmo = false, bRecoil = false, bLevitate = false, bTriggerbot = false;
+
+	ent* localPlayerPtr{ nullptr };
 
 	while (true) {
 
@@ -136,19 +142,37 @@ DWORD WINAPI HackThread(HMODULE hModule) {
 			} 
 		}
 
-		uintptr_t* localPlayerPtr = (uintptr_t*)(moduleBase + 0x10f4f4);
+		if (GetAsyncKeyState(VK_NUMPAD5) & 1) {
+			bTriggerbot = !bTriggerbot;
+		}
+
+		localPlayerPtr = *(ent**)(moduleBase + 0x10f4f4);
 		
 		if (localPlayerPtr) {
-			g_username = (char*) (*localPlayerPtr + 0x225);
+			g_username = localPlayerPtr->username;
 
 			if (bHealth) {
-				*(int*)(*localPlayerPtr + 0xf8) = 1337;
+				localPlayerPtr->health = 1337;
 			}
 
 			if (bAmmo) {
-				*(int*)mem::FindDMAAddy(moduleBase + 0x10f4f4, { 0x374, 0x14, 0x0 }) = 1337;
+				localPlayerPtr->currentWeapon->ammoClip->ammo = 1337;
 			}
 
+			if (bTriggerbot) { 
+				ent* crosshairEnt = g_GetCrosshairEnt();
+
+				if (crosshairEnt) {
+					
+					if (localPlayerPtr->team != crosshairEnt->team) {
+						localPlayerPtr->bAttack = 1;
+					}
+
+				}
+				else {
+					localPlayerPtr->bAttack = 0;
+				}
+			}
 		}
 
 		Sleep(5);
