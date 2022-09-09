@@ -38,6 +38,9 @@
     <ClInclude Include="proc.h">
       <Filter>proc</Filter>
     </ClInclude>
+    <ClInclude Include="ent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
