@@ -13,8 +13,6 @@ float g_elevatedHeight = std::numeric_limits<float>::infinity();
 float g_deltaHeight = 10.0f;
 DWORD g_jmpBackAddr;
 char* g_username = nullptr;
-
-// no prolog/epilog
 void __declspec(naked) Levitate() {
 	__asm {
 		fstp dword ptr[esi + 0x3c]
@@ -82,6 +80,19 @@ void __declspec(naked) Levitate() {
 	}
 }
 
+std::vector<ent*> loadEntities(ent** entListPtr, int numEntities) {
+	std::vector<ent*> entities;
+
+	if (entListPtr && numEntities) {
+		for (int i = 0; i < numEntities - 1; i++) {
+			ent* botPtr = entListPtr[i + 1];
+			entities.push_back(botPtr);
+		}
+	}
+
+	return entities;
+}
+
 DWORD WINAPI HackThread(HMODULE hModule) {
 	AllocConsole();
 	
@@ -92,9 +103,12 @@ DWORD WINAPI HackThread(HMODULE hModule) {
 	uintptr_t moduleBase = (uintptr_t)GetModuleHandle(L"ac_client.exe");
 	g_GetCrosshairEnt = (tGetCrosshairEnt) (moduleBase + 0x607c0);
 
-	bool bHealth = false, bAmmo = false, bRecoil = false, bLevitate = false, bTriggerbot = false;
+	bool bHealth = false, bAmmo = false, bRecoil = false, bLevitate = false, bTriggerbot = false, bESP = false;
 
 	ent* localPlayerPtr{ nullptr };
+	ent** entListPtr{ nullptr };
+
+	int numEntities = 0;
 
 	while (true) {
 
@@ -146,6 +160,10 @@ DWORD WINAPI HackThread(HMODULE hModule) {
 			bTriggerbot = !bTriggerbot;
 		}
 
+		if (GetAsyncKeyState(VK_NUMPAD6) & 1) {
+			bESP = !bESP;
+		}
+
 		localPlayerPtr = *(ent**)(moduleBase + 0x10f4f4);
 		
 		if (localPlayerPtr) {
@@ -173,6 +191,16 @@ DWORD WINAPI HackThread(HMODULE hModule) {
 					localPlayerPtr->bAttack = 0;
 				}
 			}
+		}
+
+		if (bESP) {
+			numEntities = *(int*)(moduleBase + 0x10f500);
+			entListPtr = *(ent***)(moduleBase + 0x10f4f8);
+			std::vector<ent*> entities = loadEntities(entListPtr, numEntities);
+			for (ent* entity : entities) {
+				std::cout << entity->username << ": position is x=" << entity->position.x << ", y=" << entity->position.y << ", z=" << entity->position.z << std::endl;
+			}
+			
 		}
 
 		Sleep(5);
