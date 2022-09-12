@@ -6,6 +6,17 @@
 #include "proc.h"
 #include "ent.h"
 
+typedef BOOL(__stdcall* twglSwapBuffers)(HDC hdc);
+twglSwapBuffers owglSwapBuffers;
+
+BOOL __stdcall hkwglSwapBuffers(HDC hdc) {
+	std::cout << "hooked" << std::endl;
+
+
+	// call the gateway function to execute stolen bytes
+	return owglSwapBuffers(hdc);
+}
+
 typedef ent* ( __cdecl* tGetCrosshairEnt )();
 tGetCrosshairEnt g_GetCrosshairEnt = nullptr;
 
@@ -104,6 +115,14 @@ DWORD WINAPI HackThread(HMODULE hModule) {
 	g_GetCrosshairEnt = (tGetCrosshairEnt) (moduleBase + 0x607c0);
 
 	bool bHealth = false, bAmmo = false, bRecoil = false, bLevitate = false, bTriggerbot = false, bESP = false;
+
+	//
+	owglSwapBuffers = (twglSwapBuffers)GetProcAddress(GetModuleHandle(L"opengl32.dll"), "wglSwapBuffers");
+
+	// set the global gateway function
+	owglSwapBuffers = (twglSwapBuffers)mem::TrampHook32((BYTE*)owglSwapBuffers, (BYTE*)hkwglSwapBuffers, 5);
+	//
+
 
 	ent* localPlayerPtr{ nullptr };
 	ent** entListPtr{ nullptr };

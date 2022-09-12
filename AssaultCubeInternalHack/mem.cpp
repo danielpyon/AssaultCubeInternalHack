@@ -72,3 +72,36 @@ bool mem::Hook(void* toHook, void* ourFunc, int len) {
 
 	return true;
 }
+
+bool mem::Detour32(BYTE* src, BYTE* dst, const uintptr_t len) {
+	if (len < 5)
+		return false;
+
+	DWORD prot;
+	VirtualProtect(src, len, PAGE_EXECUTE_READWRITE, &prot);
+
+	uintptr_t relativeAddr = dst - src - 5;
+	*src = 0xe9;
+	*(uintptr_t*)(src + 1) = relativeAddr;
+
+	VirtualProtect(src, len, prot, &prot);
+	return true;
+}
+
+BYTE* mem::TrampHook32(BYTE* src, BYTE* dst, const uintptr_t len) {
+	if (len < 5)
+		return false;
+
+	BYTE* gateway = (BYTE*)VirtualAlloc(0, len, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+	memcpy_s(gateway, len, src, len);
+
+	// calculate the relative offset to the original function
+	uintptr_t gatewayRelativeAddr = src - gateway - 5;
+	
+	// write jmp instruction
+	*(gateway + len) = 0xe9;
+	*(uintptr_t*)((uintptr_t)gateway + len + 1) = gatewayRelativeAddr;
+
+	Detour32(src, dst, len);
+	return gateway;
+}
