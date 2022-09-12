@@ -90,7 +90,7 @@ bool mem::Detour32(BYTE* src, BYTE* dst, const uintptr_t len) {
 
 BYTE* mem::TrampHook32(BYTE* src, BYTE* dst, const uintptr_t len) {
 	if (len < 5)
-		return false;
+		return 0;
 
 	BYTE* gateway = (BYTE*)VirtualAlloc(0, len, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
 	memcpy_s(gateway, len, src, len);
