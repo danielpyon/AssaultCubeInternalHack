@@ -99,6 +99,7 @@ std::vector<ent*> loadEntities(ent** entListPtr, int numEntities) {
 typedef BOOL(__stdcall* twglSwapBuffers)(HDC hdc);
 twglSwapBuffers owglSwapBuffers;
 
+
 BOOL __stdcall hkwglSwapBuffers(HDC hdc) {
 	// std::cout << "hooked" << std::endl;
 
@@ -215,14 +216,16 @@ DWORD WINAPI HackThread(HMODULE hModule) {
 	freopen_s(&f, "CONOUT$", "w", stdout);
 	std::cout << "Started client..." << std::endl;
 
+	// main hack
 	owglSwapBuffers = (twglSwapBuffers)GetProcAddress(GetModuleHandle(L"opengl32.dll"), "wglSwapBuffers");
 	// set the global gateway function
 	owglSwapBuffers = (twglSwapBuffers)mem::TrampHook32((BYTE*)owglSwapBuffers, (BYTE*)hkwglSwapBuffers, 5);
 
 
+
 	fclose(f);
 	FreeConsole();
-	// reeLibraryAndExitThread(hModule, 0);
+	// FreeLibraryAndExitThread(hModule, 0);
 	return 0;
 
 }
