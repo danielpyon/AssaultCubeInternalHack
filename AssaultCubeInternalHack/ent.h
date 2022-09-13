@@ -1,12 +1,11 @@
 #include <windows.h>
 #include <cstdio>
 #include <cstdint>
+#include "geom.h"
 
 struct vec3 {
 	float x, y, z;
 };
-
-using Vector3 = vec3;
 
 class ammoPtr
 {

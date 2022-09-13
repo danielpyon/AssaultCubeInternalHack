@@ -128,11 +128,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="geom.cpp" />
     <ClCompile Include="mem.cpp" />
     <ClCompile Include="proc.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ent.h" />
+    <ClInclude Include="geom.h" />
     <ClInclude Include="mem.h" />
     <ClInclude Include="proc.h" />
   </ItemGroup>
