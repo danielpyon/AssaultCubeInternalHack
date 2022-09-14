@@ -105,3 +105,8 @@ BYTE* mem::TrampHook32(BYTE* src, BYTE* dst, const uintptr_t len) {
 	Detour32(src, dst, len);
 	return gateway;
 }
+
+void mem::Unhook(BYTE* gateway, BYTE* addr, const uintptr_t len) {
+	Detour32(addr, gateway, len);
+	VirtualFree(gateway, 0, MEM_RELEASE);
+}

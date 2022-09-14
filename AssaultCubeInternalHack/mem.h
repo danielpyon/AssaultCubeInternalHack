@@ -15,4 +15,5 @@ namespace mem {
 
 	bool Detour32(BYTE* src, BYTE* dst, const uintptr_t len);
 	BYTE* TrampHook32(BYTE* src, BYTE* dst, const uintptr_t len);
+	void Unhook(BYTE* addr, BYTE* gateway, const uintptr_t len);
 }

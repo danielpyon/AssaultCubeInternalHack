@@ -7,7 +7,7 @@
 #include "ent.h"
 
 uintptr_t moduleBase = (uintptr_t)GetModuleHandle(L"ac_client.exe");
-bool bHealth = false, bAmmo = false, bRecoil = false, bLevitate = false, bTriggerbot = false, bESP = false;
+bool bHacks = true, bHealth = false, bAmmo = false, bRecoil = false, bLevitate = false, bTriggerbot = false, bESP = false;
 
 typedef ent* (__cdecl* tGetCrosshairEnt)();
 tGetCrosshairEnt g_GetCrosshairEnt = nullptr;
@@ -111,11 +111,12 @@ BOOL __stdcall hkwglSwapBuffers(HDC hdc) {
 
 	int numEntities = 0;
 
-	/*
-	if (GetAsyncKeyState(VK_END) & 1) {
-		// unhook
+	if (GetAsyncKeyState(VK_NUMPAD0) & 1) {
+		bHacks = !bHacks;
 	}
-	*/
+
+	if (!bHacks)
+		return owglSwapBuffers(hdc);
 
 	if (GetAsyncKeyState(VK_NUMPAD1) & 1) {
 		bHealth = !bHealth;
@@ -138,7 +139,7 @@ BOOL __stdcall hkwglSwapBuffers(HDC hdc) {
 
 	if (GetAsyncKeyState(VK_NUMPAD4) & 1) {
 		bLevitate = !bLevitate;
-
+		
 		if (bLevitate) {
 			DWORD hookAddr = (DWORD)(moduleBase + 0x5be04);
 			int hookLength = 5;
@@ -205,7 +206,7 @@ BOOL __stdcall hkwglSwapBuffers(HDC hdc) {
 	}
 	//
 
-	// call the gateway function to execute stolen bytes
+
 	return owglSwapBuffers(hdc);
 }
 
@@ -220,6 +221,7 @@ DWORD WINAPI HackThread(HMODULE hModule) {
 	owglSwapBuffers = (twglSwapBuffers)GetProcAddress(GetModuleHandle(L"opengl32.dll"), "wglSwapBuffers");
 	// set the global gateway function
 	owglSwapBuffers = (twglSwapBuffers)mem::TrampHook32((BYTE*)owglSwapBuffers, (BYTE*)hkwglSwapBuffers, 5);
+
 
 
 

@@ -7,7 +7,7 @@
 - [x] triggerbot reversing + implementation
 - [x] trampoline hook
 - [x] get input only once per frame in hkwglSwapBuffers
-- [ ] write mem::Unhook
+- [x] write mem::Unhook
 - [ ] get debug output working
 - [ ] refactor levitation hack to use tramp hook
 - [ ] render rects/text with openGL
